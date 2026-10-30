@@ -1,0 +1,51 @@
+name: Codex Release Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-package:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: online-event-stack-fix-20261030
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          NONAME_BUILD_CHANNEL: test
+          NONAME_BUILD_COMMIT: ${{ github.sha }}
+        run: pnpm build
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          zip -r ../noname-online-event-stack-fix.zip .
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$RELEASE_TAG" ./noname-online-event-stack-fix.zip \
+            --title "无名杀联机事件栈修复" \
+            --notes "包含联机开局事件栈修复的完整构建包。" \
+            --prerelease
