@@ -32,6 +32,12 @@ export default class GameEventManager {
 			}
 		} else if (internal) {
 			this.eventStack.push(event);
+		} else if (event.name === "game" && event.step === 1) {
+			// A new game root event must recover from a stale online event stack.
+			this.eventStack.length = 0;
+			this.eventStack.push(event);
+			this.rootEvent = event;
+			this.tempEvent = undefined;
 		} else if (this.eventStack.includes(event)) {
 			this.tempEvent = event;
 		} else {
